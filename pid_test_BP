@@ -1,0 +1,92 @@
+#include <iostream>
+#include <iomanip>
+#include <cmath>
+#include <vector>
+#include <chrono>
+#include <thread>
+#include "pid.h"
+
+using namespace std;
+
+// Rover parameters
+const double WHEEL_RADIUS = 0.16;     // meters
+const double WHEEL_CIRC = 1.00531;    // meters
+const double MAX_VELOCITY = 1.34;     // m/s
+const double ACCEL_LIMIT = 0.2;       // m/s^2
+const double MASS = 25.0;             // kg (example rover mass)
+const int NUM_WHEELS = 6;
+
+// Simulation parameters
+const double SIM_DT = 0.05;           // 50 ms step
+const double SIM_TIME = 10.0;         // seconds
+
+// Simple model: v_dot = (u - resistive term)
+struct Wheel {
+    double velocity;  // m/s
+    double accel;     // m/s^2
+    double torqueCmd; // control output
+    double power;     // W
+    PID controller;
+};
+
+int main() {
+    vector<Wheel> wheels(NUM_WHEELS);
+    double targetVel = 1.0; // m/s setpoint
+
+    // PID tuning (adjust to see behavior)
+    double Kp = 3.0;
+    double Ki = 1.5;
+    double Kd = 0.05;
+
+    for (int i = 0; i < NUM_WHEELS; i++) {
+        wheels[i].controller.setTunings(Kp, Ki, Kd);
+        wheels[i].controller.setOutputLimits(-1.0, 1.0); // normalized torque
+        wheels[i].controller.setIMax(0.5);
+        wheels[i].velocity = 0.0;
+        wheels[i].accel = 0.0;
+        wheels[i].power = 0.0;
+    }
+
+    cout << fixed << setprecision(3);
+    cout << "Time(s)\tWheel\tVelocity(m/s)\tAccel(m/s^2)\tPower(W)" << endl;
+
+    for (double t = 0.0; t <= SIM_TIME; t += SIM_DT) {
+        for (int i = 0; i < NUM_WHEELS; i++) {
+            // Measure current velocity
+            double v_meas = wheels[i].velocity;
+
+            // PID control: output normalized torque (-1 to 1)
+            double control = wheels[i].controller.update(targetVel, v_meas, SIM_DT);
+
+            // Convert control to acceleration
+            // assume control = torque fraction of max_accel
+            double accel = control * ACCEL_LIMIT;
+
+            // Add simple drag/friction model
+            accel -= 0.15 * v_meas; // resistive drag term
+
+            // Integrate acceleration to velocity
+            wheels[i].velocity += accel * SIM_DT;
+            if (wheels[i].velocity > MAX_VELOCITY) wheels[i].velocity = MAX_VELOCITY;
+            if (wheels[i].velocity < -MAX_VELOCITY) wheels[i].velocity = -MAX_VELOCITY;
+
+            wheels[i].accel = accel;
+
+            // Estimate power = F * v = m * a * v
+            wheels[i].power = MASS / NUM_WHEELS * accel * wheels[i].velocity;
+
+            // Display
+            cout << t << "\t" << (i+1) << "\t" 
+                 << wheels[i].velocity << "\t\t" 
+                 << wheels[i].accel << "\t\t" 
+                 << wheels[i].power << endl;
+        }
+
+        this_thread::sleep_for(chrono::milliseconds((int)(SIM_DT * 1000)));
+    }
+
+    cout << "\n--- Simulation complete ---" << endl;
+    cout << "Target velocity: " << targetVel << " m/s" << endl;
+    cout << "PID gains: Kp=" << Kp << " Ki=" << Ki << " Kd=" << Kd << endl;
+    return 0;
+}
