@@ -3,11 +3,15 @@
 <package format="3">
   <name>rover_teleop</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>Keyboard teleoperation for rover with fixed-speed forward motion</description>
   <maintainer email="dguido@todo.todo">dguido</maintainer>
   <license>TODO: License declaration</license>
 
-  <test_depend>ament_copyright</test_depend>
+  <!-- Runtime dependencies -->
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+
+  <!-- Test dependencies -->
   <test_depend>ament_flake8</test_depend>
   <test_depend>ament_pep257</test_depend>
   <test_depend>python3-pytest</test_depend>

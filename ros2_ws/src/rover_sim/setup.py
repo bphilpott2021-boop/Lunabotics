@@ -24,6 +24,8 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'simple_wheel_sim = rover_sim.simple_wheel_sim:main',
         ],
     },
 )
+

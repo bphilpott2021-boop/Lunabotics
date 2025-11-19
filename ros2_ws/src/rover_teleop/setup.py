@@ -15,7 +15,7 @@ setup(
     zip_safe=True,
     maintainer='dguido',
     maintainer_email='dguido@todo.todo',
-    description='TODO: Package description',
+    description='Keyboard teleoperation for rover with fixed-speed forward motion',
     license='TODO: License declaration',
     extras_require={
         'test': [
@@ -24,6 +24,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'keyboard_teleop = rover_teleop.keyboard_teleop:main',
         ],
     },
 )
