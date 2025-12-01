@@ -9,7 +9,7 @@ This repo contains all software for our Lunabotics 2026 rover, including:
 ## 🛰 Phase 1 Rover Control Architecture (Production Intended)
 
 ```mermaid
-<<flowchart LR
+flowchart LR
   %% ================== GROUND STATION ==================
   subgraph GS["Ground Station (Operator Laptop / Base Station)"]
     KBD[Keyboard / Joystick / RC TX]
@@ -63,7 +63,6 @@ This repo contains all software for our Lunabotics 2026 rover, including:
   TICKS --> OBS
   JOINT --> OBS
   CMD --> OBS
->>
 
 
 ## Repo Structure
