@@ -18,15 +18,15 @@ flowchart LR
 
   %% ================== ROS 2 NETWORK ===================
   subgraph NET["ROS 2 Jazzy Middleware (DDS Domain)"]
-    CMD[/ /cmd_vel  or  /motor/cmd_vel\n(geometry_msgs/Twist) /]
-    ODOM[/ /odom\n(nav_msgs/Odometry) /]
-    JOINT[/ /joint_states /]
-    TICKS[/ /wheel_ticks /]
+    CMD["/cmd_vel or /motor/cmd_vel<br/>(geometry_msgs/Twist)"]
+    ODOM["/odom<br/>(nav_msgs/Odometry)"]
+    JOINT["/joint_states"]
+    TICKS["/wheel_ticks"]
   end
 
   %% =========== ONBOARD ROVER COMPUTER =================
   subgraph ROVER["Onboard Rover Computer (Jetson/NUC)"]
-    subgraph CM["ros2_control  controller_manager"]
+    subgraph CM["ros2_control controller_manager"]
       DDC[diff_drive_controller\n(skid steer config via YAML)]
     end
     HW[rover_hardware_interface\n(ros2_control SystemInterface)]
@@ -40,19 +40,19 @@ flowchart LR
   end
 
   %% =============== COMMAND FLOW =======================
-  KBD -->|"operator input\n(keys / joystick / RC"| TELOP
+  KBD -->|"operator input<br/>(keys / joystick / RC)"| TELOP
   TELOP -->|"publishes Twist"| CMD
   CMD -->|"subscribes"| DDC
-  DDC -->|"writes wheel velocity setpoints\n(command interfaces"| HW
-  HW -->|"serial velocity targets\n(L/R wheel)"| BRIDGE
+  DDC -->|"writes wheel velocity setpoints<br/>(command interfaces)"| HW
+  HW -->|"serial velocity targets<br/>(L/R wheel)"| BRIDGE
   BRIDGE -->|"USB/TTL serial protocol"| ARD
   ARD -->|"PWM / H-bridge drive"| MOTORS
 
   %% =============== FEEDBACK FLOW ======================
   MOTORS -->|"encoder ticks"| ARD
-  ARD -->|"measured wheel pos/vel\n(raw counts)"| BRIDGE
+  ARD -->|"measured wheel pos/vel<br/>(raw counts)"| BRIDGE
   BRIDGE -->|"parsed wheel states"| HW
-  HW -->|"state interfaces\n(pos, vel per wheel)"| DDC
+  HW -->|"state interfaces<br/>(pos, vel per wheel)"| DDC
   DDC -->|"publishes odometry + TF"| ODOM
   HW -->|"publishes raw ticks"| TICKS
   HW -->|"publishes joint states"| JOINT
@@ -63,6 +63,7 @@ flowchart LR
   TICKS --> OBS
   JOINT --> OBS
   CMD --> OBS
+
 
 
 ## Repo Structure
