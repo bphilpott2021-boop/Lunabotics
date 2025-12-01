@@ -5,6 +5,67 @@ This repo contains all software for our Lunabotics 2026 rover, including:
 - Motor control / PID experiments
 - Utility scripts
 
+
+## 🛰 Phase 1 Rover Control Architecture (Production Intended)
+
+```mermaid
+<<flowchart LR
+  %% ================== GROUND STATION ==================
+  subgraph GS["Ground Station (Operator Laptop / Base Station)"]
+    KBD[Keyboard / Joystick / RC TX]
+    TELOP[rover_teleop\nteleop node]
+  end
+
+  %% ================== ROS 2 NETWORK ===================
+  subgraph NET["ROS 2 Jazzy Middleware (DDS Domain)"]
+    CMD[/ /cmd_vel  or  /motor/cmd_vel\n(geometry_msgs/Twist) /]
+    ODOM[/ /odom\n(nav_msgs/Odometry) /]
+    JOINT[/ /joint_states /]
+    TICKS[/ /wheel_ticks /]
+  end
+
+  %% =========== ONBOARD ROVER COMPUTER =================
+  subgraph ROVER["Onboard Rover Computer (Jetson/NUC)"]
+    subgraph CM["ros2_control  controller_manager"]
+      DDC[diff_drive_controller\n(skid steer config via YAML)]
+    end
+    HW[rover_hardware_interface\n(ros2_control SystemInterface)]
+    BRIDGE[rover_arduino_bridge\n(optional: separate node or part of HW)]
+  end
+
+  %% =============== LOW-LEVEL HARDWARE =================
+  subgraph HWL["Low-Level Hardware"]
+    ARD[Arduino Motor Controller\n(per-wheel PID: velocity/position)]
+    MOTORS[Left & Right Drive Motors\n+ Encoders]
+  end
+
+  %% =============== COMMAND FLOW =======================
+  KBD -->|"operator input\n(keys / joystick / RC"| TELOP
+  TELOP -->|"publishes Twist"| CMD
+  CMD -->|"subscribes"| DDC
+  DDC -->|"writes wheel velocity setpoints\n(command interfaces"| HW
+  HW -->|"serial velocity targets\n(L/R wheel)"| BRIDGE
+  BRIDGE -->|"USB/TTL serial protocol"| ARD
+  ARD -->|"PWM / H-bridge drive"| MOTORS
+
+  %% =============== FEEDBACK FLOW ======================
+  MOTORS -->|"encoder ticks"| ARD
+  ARD -->|"measured wheel pos/vel\n(raw counts)"| BRIDGE
+  BRIDGE -->|"parsed wheel states"| HW
+  HW -->|"state interfaces\n(pos, vel per wheel)"| DDC
+  DDC -->|"publishes odometry + TF"| ODOM
+  HW -->|"publishes raw ticks"| TICKS
+  HW -->|"publishes joint states"| JOINT
+
+  %% =============== OBSERVABILITY ======================
+  OBS[RViz2 / rqt / Foxglove\nDebug & Monitoring]
+  ODOM --> OBS
+  TICKS --> OBS
+  JOINT --> OBS
+  CMD --> OBS
+>>
+
+
 ## Repo Structure
 
 ```text
